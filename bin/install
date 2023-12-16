@@ -1,0 +1,8 @@
+#!/bin/sh -e
+libpath=/usr/local/lib/gemweb-ssg
+binpath=/usr/local/bin
+[ -d "$libpath" ] && rm -r "$libpath"
+install -D package.json "$libpath/package.json"
+cp -r dist "$libpath/dist"
+cp -r node_modules "$libpath/node_modules"
+install -D bin/gemweb $binpath/gemweb

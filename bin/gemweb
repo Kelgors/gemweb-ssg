@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+void import("/usr/local/lib/gemweb-ssg/dist/cli.js");
