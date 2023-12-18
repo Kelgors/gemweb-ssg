@@ -6,7 +6,7 @@ import path from "node:path";
 import { default as slugify } from "slugify";
 import { gmiRenderer } from "./renderer/gemini";
 import { htmlRenderer } from "./renderer/html";
-import { ArticleMetadata } from "./rss";
+import { ArticleMetadata } from "./schema";
 
 handlebars.registerHelper("formatDate", function (date) {
   return [

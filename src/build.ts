@@ -2,12 +2,9 @@ import matter from "gray-matter";
 import fs from "node:fs/promises";
 import path from "node:path";
 import recursive from "recursive-readdir";
+import { generateFeeds } from "./feed";
 import { FORMATS, renderMarkdown, renderTemplate } from "./render";
-import {
-  FileArticleMetadata,
-  articleMetadataSchema,
-  generateFeeds,
-} from "./rss";
+import { FileArticleMetadata, articleMetadataSchema } from "./schema";
 
 export async function build(inputDir: string, outputDir: string) {
   const inputDirReg = new RegExp(`^${inputDir}`);
