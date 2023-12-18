@@ -49,7 +49,6 @@ export async function generateFeeds(
     ).toString();
     feed.addItem({
       id: url,
-      guid: metadata.id,
       title: metadata.title,
       description: metadata.description || "",
       date: metadata.created_at,
