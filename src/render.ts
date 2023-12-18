@@ -21,6 +21,9 @@ handlebars.registerHelper("join", function (array, separator = " ") {
 handlebars.registerHelper("slug", function (text) {
   return slugify(text, { lower: true });
 });
+handlebars.registerHelper("replace", function (text, pattern, b) {
+  return text.replace(new RegExp(pattern), b);
+});
 
 export type FormatType = "html" | "gemini";
 export const FORMATS: FormatType[] = ["html", "gemini"];
