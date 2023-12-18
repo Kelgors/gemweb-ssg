@@ -6,7 +6,7 @@ import { FORMATS, renderMarkdown, renderTemplate } from "./render";
 import {
   FileArticleMetadata,
   articleMetadataSchema,
-  generateRssFeed,
+  generateFeeds,
 } from "./rss";
 
 export async function build(inputDir: string, outputDir: string) {
@@ -80,16 +80,14 @@ export async function build(inputDir: string, outputDir: string) {
   }
 
   for (const format of FORMATS) {
-    const formattedRssFeed = await generateRssFeed(articlesMetadata, {
+    const { rss, atom } = await generateFeeds(articlesMetadata, {
       ext: format === "gemini" ? ".gmi" : ".html",
       baseUrl: `${
         format === "gemini" ? "gemini://" : "https://www."
       }kelgors.me/`,
     });
     const formattedOutputDir = path.join(outputDir, format);
-    await fs.writeFile(
-      path.join(formattedOutputDir, "rss.xml"),
-      formattedRssFeed
-    );
+    await fs.writeFile(path.join(formattedOutputDir, "rss.xml"), rss);
+    await fs.writeFile(path.join(formattedOutputDir, "atom.xml"), atom);
   }
 }

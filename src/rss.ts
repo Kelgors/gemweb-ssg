@@ -1,5 +1,5 @@
 import { assert } from "console";
-import RSS from "rss";
+import { Feed } from "feed";
 import { z } from "zod";
 
 export const articleMetadataSchema = z.object({
@@ -26,7 +26,7 @@ export type GenerateRssFeedOptions = {
   ext: string;
   baseUrl: string;
 };
-export async function generateRssFeed(
+export async function generateFeeds(
   fileArticleMetadata: FileArticleMetadata[],
   options: GenerateRssFeedOptions
 ) {
@@ -35,37 +35,50 @@ export async function generateRssFeed(
       .length === fileArticleMetadata.length,
     "metadata.id should be unique"
   );
-  const url = new URL(options.baseUrl);
   const firstIndexFile = fileArticleMetadata.find(
     (item) => item.path === "/index.md"
   );
   if (!firstIndexFile) throw new Error("Missing /index.md");
-  url.pathname = "/rss.xml";
-  const feed = new RSS({
-    title: firstIndexFile.metadata.title,
-    description: firstIndexFile.metadata.description,
-    feed_url: url.toString(),
-    site_url: options.baseUrl,
-    language: "en",
-    pubDate: firstIndexFile.metadata.created_at,
-    ttl: 2628000,
-  });
-  fileArticleMetadata
+  const sortedArticles = fileArticleMetadata
     .filter((item) => item.metadata.type === "article")
     .sort((a, b) => {
       // sort DESC
       return b.metadata.created_at.getTime() - a.metadata.created_at.getTime();
-    })
-    .forEach(({ path, metadata }) => {
-      url.pathname = path.replace(/\.md$/, options.ext);
-      feed.item({
-        title: metadata.title,
-        description: metadata.description || "",
-        date: metadata.created_at,
-        guid: metadata.id,
-        url: url.toString(),
-        author: "Kelgors",
-      });
     });
-  return feed.xml();
+  const feed = new Feed({
+    id: options.baseUrl,
+    title: firstIndexFile.metadata.title,
+    description: firstIndexFile.metadata.description,
+    link: options.baseUrl,
+    copyright: "",
+    updated: sortedArticles
+      .map(({ metadata }) => metadata.updated_at)
+      .sort((a, b) => b.getTime() - a.getTime())[0],
+    feedLinks: {
+      atom: new URL("/atom.xml", options.baseUrl).toString(),
+      rss: new URL("/rss.xml", options.baseUrl).toString(),
+    },
+    language: "en",
+    ttl: 2628000,
+  });
+
+  sortedArticles.forEach(({ path, metadata }) => {
+    const url = new URL(
+      path.replace(/\.md$/, options.ext),
+      options.baseUrl
+    ).toString();
+    feed.addItem({
+      id: url,
+      guid: metadata.id,
+      title: metadata.title,
+      description: metadata.description || "",
+      date: metadata.created_at,
+      link: url,
+    });
+  });
+
+  return {
+    atom: feed.atom1(),
+    rss: feed.rss2(),
+  };
 }
