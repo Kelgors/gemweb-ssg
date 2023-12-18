@@ -3,8 +3,9 @@
 Generate an HTTP website and Gemini capsule from markdown.
 
 ```sh
-yarn # or npm ci
+yarn # or npm install
 yarn build # or npm run build
+yarn install --prod # or npm install --omit dev
 sudo bin/install
 # gemweb <source directory> <destination directory>
 gemweb content public
