@@ -17,10 +17,14 @@ export async function build(inputDir: string, outputDir: string) {
   for (const fullpath of files) {
     if (!fullpath.endsWith(".md")) {
       // ignore dotfiles
-      if (path.basename(fullpath).startsWith(".")) continue;
+      if (path.basename(fullpath).startsWith(".")) {
+        console.info("Ignoring(file: %s)", fullpath);
+        continue;
+      }
       // copy file foreach formats
       for (const format of FORMATS) {
         const formattedOutputDir = path.join(outputDir, format);
+        console.info("Copying(format: %s, file: %s)", format, fullpath);
         await fs.mkdir(
           path.dirname(fullpath).replace(inputDirReg, formattedOutputDir),
           { recursive: true }
@@ -53,7 +57,7 @@ export async function build(inputDir: string, outputDir: string) {
     if (typeof metadata.author === "undefined") metadata.author = "Kelgors";
 
     for (const format of FORMATS) {
-      console.log("Processing(format: %s, file: %s)", format, fullpath);
+      console.info("Processing(format: %s, file: %s)", format, fullpath);
       const output = await renderMarkdown(markdown, { format });
       const ext = format === "gemini" ? ".gmi" : ".html";
       const final = await renderTemplate(output, {
