@@ -84,7 +84,7 @@ export async function build(inputDir: string, outputDir: string) {
       }kelgors.me/`,
     });
     const formattedOutputDir = path.join(outputDir, format);
-    await fs.writeFile(path.join(formattedOutputDir, "rss.xml"), rss);
-    await fs.writeFile(path.join(formattedOutputDir, "atom.xml"), atom);
+    await fs.writeFile(path.join(formattedOutputDir, "posts/rss.xml"), rss);
+    await fs.writeFile(path.join(formattedOutputDir, "posts/atom.xml"), atom);
   }
 }
