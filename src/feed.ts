@@ -35,8 +35,8 @@ export async function generateFeeds(
       .map(({ metadata }) => metadata.updated_at)
       .sort((a, b) => b.getTime() - a.getTime())[0],
     feedLinks: {
-      atom: new URL("/atom.xml", options.baseUrl).toString(),
-      rss: new URL("/rss.xml", options.baseUrl).toString(),
+      atom: new URL("/posts/atom.xml", options.baseUrl).toString(),
+      rss: new URL("/posts/rss.xml", options.baseUrl).toString(),
     },
     language: "en",
     ttl: 2628000,
