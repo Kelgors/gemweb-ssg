@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import handlebars from "handlebars";
 import { marked } from "marked";
 import fs from "node:fs/promises";
@@ -6,27 +5,26 @@ import path from "node:path";
 import { default as slugify } from "slugify";
 import { gmiRenderer } from "./renderer/gemini";
 import { htmlRenderer } from "./renderer/html";
-import { ArticleMetadata } from "./schema";
+import { PageMetadata } from "./schema";
 
-handlebars.registerHelper("formatDate", function (date) {
+handlebars.registerHelper("formatDate", function(date) {
   return [
     date.getFullYear(),
     (date.getMonth() + 1).toString().padStart(2, "0"),
     date.getDate().toString().padStart(2, "0"),
   ].join("-");
 });
-handlebars.registerHelper("join", function (array, separator = " ") {
+handlebars.registerHelper("join", function(array, separator = " ") {
   return array.join(typeof separator === "string" ? separator : " ");
 });
-handlebars.registerHelper("slug", function (text) {
+handlebars.registerHelper("slug", function(text) {
   return slugify(text, { lower: true });
 });
-handlebars.registerHelper("replace", function (text, pattern, b) {
+handlebars.registerHelper("replace", function(text, pattern, b) {
   return text.replace(new RegExp(pattern), b);
 });
 
 export type FormatType = "html" | "gemini";
-export const FORMATS: FormatType[] = ["html", "gemini"];
 export type RenderMarkdownOptions = {
   format: FormatType;
 };
@@ -51,7 +49,7 @@ export type RenderTemplateOptions = {
   ext: string;
   sourcePath: string;
   relativePath: string;
-  metadata: ArticleMetadata;
+  metadata: PageMetadata;
 };
 export async function renderTemplate(
   body: string,

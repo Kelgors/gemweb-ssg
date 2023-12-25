@@ -13,10 +13,10 @@ export const articleMetadataSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export type ArticleMetadata = z.infer<typeof articleMetadataSchema>;
+export type PageMetadata = z.infer<typeof articleMetadataSchema>;
 
-export type FileArticleMetadata = {
+export type FilePageMetadata = {
   filename: string;
   path: string;
-  metadata: ArticleMetadata;
+  metadata: PageMetadata;
 };

@@ -1,26 +1,30 @@
 import { assert } from "console";
 import { Feed } from "feed";
-import { FileArticleMetadata } from "./schema";
+import { FilePageMetadata, PageMetadata } from "./schema";
+import path from 'node:path';
 
 export type GenerateRssFeedOptions = {
   ext: string;
   baseUrl: string;
+  feedPath: string;
+  feedAuthor: string;
 };
 export async function generateFeeds(
-  fileArticleMetadata: FileArticleMetadata[],
+  filePageMetadata: FilePageMetadata[],
   options: GenerateRssFeedOptions
 ) {
+  console.log('metadata[]: %o', filePageMetadata)
+  console.log('options: %o', options)
   assert(
-    [...new Set(fileArticleMetadata.map(({ metadata }) => metadata.id))]
-      .length === fileArticleMetadata.length,
+    [...new Set(filePageMetadata.map(({ metadata }) => metadata.id))]
+      .length === filePageMetadata.length,
     "metadata.id should be unique"
   );
-  const firstIndexFile = fileArticleMetadata.find(
-    (item) => item.path === "/index.md"
+  const firstIndexFile = filePageMetadata.find(
+    (item) => item.path === path.join(options.feedPath, 'index.md')
   );
   if (!firstIndexFile) throw new Error("Missing /index.md");
-  const sortedArticles = fileArticleMetadata
-    .filter((item) => item.metadata.type === "article")
+  const sortedArticles = filePageMetadata
     .sort((a, b) => {
       // sort DESC
       return b.metadata.created_at.getTime() - a.metadata.created_at.getTime();
@@ -35,8 +39,8 @@ export async function generateFeeds(
       .map(({ metadata }) => metadata.updated_at)
       .sort((a, b) => b.getTime() - a.getTime())[0],
     feedLinks: {
-      atom: new URL("/posts/atom.xml", options.baseUrl).toString(),
-      rss: new URL("/posts/rss.xml", options.baseUrl).toString(),
+      atom: new URL(`${options.feedPath}/atom.xml`, options.baseUrl).toString(),
+      rss: new URL(`${options.feedPath}/rss.xml`, options.baseUrl).toString(),
     },
     language: "en",
     ttl: 2628000,
@@ -55,7 +59,7 @@ export async function generateFeeds(
       link: url,
       author: [
         {
-          name: "Kelgors",
+          name: options.feedAuthor,
         },
       ],
     });
@@ -64,5 +68,6 @@ export async function generateFeeds(
   return {
     atom: feed.atom1(),
     rss: feed.rss2(),
+    json1: feed.json1()
   };
 }
