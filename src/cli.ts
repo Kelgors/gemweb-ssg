@@ -22,7 +22,7 @@ void program
       feed: {
         path: options.feed || undefined,
         title: options.feedTitle || undefined,
-        description: options.feedDescription || undefined,
+        description: options.feedDesc || undefined,
         domain: options.feedDomain || undefined,
       },
       author: options.author || undefined,
