@@ -1,27 +1,34 @@
-import { program } from "commander";
-import path from "node:path";
-import { build } from "./build";
-import { FormatType } from "./render";
+import { program } from 'commander';
+import path from 'node:path';
+import { build } from './build';
+import { FormatType } from './render';
 
 void program
-  .argument("<source>", "Directory containing your website in markdown")
-  .argument("<destination>", "Directory you want to put your website in")
+  .argument('<source>', 'Directory containing your website in markdown')
+  .argument('<destination>', 'Directory you want to put your website in')
   .option('--html', 'Will output html from markdown', false)
   .option('--gmi', 'Will output gemini from markdown', false)
-  .option('--author <name>', 'Define the site author')
+  .option('--author <name>', 'Define the default author if missing from metadata')
   .option('--feed <path>', 'Define the relative path to generate rss,atom feeds')
-  .option('--domain <domain>', 'Define the domain to use in feed')
+  .option('--feed-title <title>', 'Define the title of your feed')
+  .option('--feed-desc <description>', 'Define the description of your feed')
+  .option('--feed-domain <domain>', 'Define the domain to use in feed (feed)')
   .action((source, destination, options) => {
     if (options.feed) {
-      if (!options.author) throw 'You must provide --author= options when you generate a feed';
-      if (!options.domain) throw 'You must provide --domain= options when you generate a feed';
+      if (!options.feedTitle) throw 'You must provide --feed-title= options when you generate a feed';
+      if (!options.feedDomain) throw 'You must provide --feed-domain= options when you generate a feed';
     }
-    return build(path.normalize(source), path.normalize(destination),
-      {
-        author: options.author || undefined,
-        feed: options.feed || undefined,
-        domain: options.domain || undefined,
-        formats: [options.html ? 'html' : undefined, options.gmi ? 'gemini' : undefined].filter((d): d is FormatType => !!d)
-      });
+    return build(path.normalize(source), path.normalize(destination), {
+      feed: {
+        path: options.feed || undefined,
+        title: options.feedTitle || undefined,
+        description: options.feedDescription || undefined,
+        domain: options.feedDomain || undefined,
+      },
+      author: options.author || undefined,
+      formats: [options.html ? 'html' : undefined, options.gmi ? 'gemini' : undefined].filter(
+        (d): d is FormatType => !!d,
+      ),
+    });
   })
   .parseAsync();

@@ -1,63 +1,55 @@
-import he from "he";
-import { type RendererApi } from "marked";
-import { table } from "table";
+import he from 'he';
+import { type RendererApi } from 'marked';
+import { table } from 'table';
 
 export const gmiRenderer: RendererApi = {
   code(code, infostring, escaped) {
-    return ["```", code, "```"].join("\n") + "\n\n";
+    return ['```', code, '```'].join('\n') + '\n\n';
   },
   blockquote(quote) {
     return (
       quote
-        .split("\n")
+        .split('\n')
         .map((line) => `> ${he.decode(line)}`)
-        .join("\n") + "\n"
+        .join('\n') + '\n'
     );
   },
   html(html, block) {
     return html
-      .replace(/\<!--.*--\>/g, "")
+      .replace(/\<!--.*--\>/g, '')
       .trim()
-      .replace(/\<br\>/g, "\n");
+      .replace(/\<br\>/g, '\n');
   },
   heading(text, level, raw) {
-    return `${new Array(level).fill("#").join("")} ${he.decode(text)}\n\n`;
+    return `${new Array(level).fill('#').join('')} ${he.decode(text)}\n\n`;
   },
   hr() {
-    return "---";
+    return '---';
   },
   list(body, ordered, start) {
-    return body + "\n";
+    return body + '\n';
   },
   listitem(text, task, checked) {
-    const listitem = [
-      "*",
-      `[${checked ? "x" : " "}]`,
-      he.decode(text).trim(),
-      "\n",
-    ];
+    const listitem = ['*', `[${checked ? 'x' : ' '}]`, he.decode(text).trim(), '\n'];
     if (!task) listitem.splice(1, 1);
-    if (text.startsWith("=> ")) listitem.splice(0, 1);
-    return listitem.join(" ");
+    if (text.startsWith('=> ')) listitem.splice(0, 1);
+    return listitem.join(' ');
   },
   checkbox(checked) {
-    return checked ? "x" : " ";
+    return checked ? 'x' : ' ';
   },
   paragraph(text) {
-    return [he.decode(text).trim(), "\n", "\n"].join("");
+    return [he.decode(text).trim(), '\n', '\n'].join('');
   },
   table(header, body) {
-    const data = [
-      ...JSON.parse(`[${header.slice(0, -1)}]`),
-      ...JSON.parse(`[${body.slice(0, -1)}]`),
-    ];
-    return table(data) + "\n";
+    const data = [...JSON.parse(`[${header.slice(0, -1)}]`), ...JSON.parse(`[${body.slice(0, -1)}]`)];
+    return table(data) + '\n';
   },
   tablerow(content) {
     return `[${content.slice(0, -1)}],`;
   },
   tablecell(text, flags) {
-    return JSON.stringify(he.decode(text)) + ",";
+    return JSON.stringify(he.decode(text)) + ',';
   },
   // INLINE
   strong(text) {
@@ -70,13 +62,13 @@ export const gmiRenderer: RendererApi = {
     return `\`${he.decode(text)}\``;
   },
   br() {
-    return "\n";
+    return '\n';
   },
   del(text) {
     return `~~${he.decode(text)}~~`;
   },
   link(href, title, text) {
-    const processedHref = href.replace(/\.md$/, ".gmi");
+    const processedHref = href.replace(/\.md$/, '.gmi');
     return `=> ${processedHref} ${text ? he.decode(text) : processedHref}`;
   },
   image(href, title, text) {

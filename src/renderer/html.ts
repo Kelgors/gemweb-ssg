@@ -1,16 +1,10 @@
-import { Renderer, type RendererApi } from "marked";
-import slugify from "slugify";
+import { Renderer, type RendererApi } from 'marked';
+import slugify from 'slugify';
 
 export const htmlRenderer: Partial<RendererApi> = {
   heading(text, level, raw) {
     const slug = slugify(text, { lower: true });
-    return [
-      `<h${level}>`,
-      `<a name="${slug}" class="anchor" href="#${slug}">`,
-      text,
-      `</a>`,
-      `</h${level}>`,
-    ].join("");
+    return [`<h${level}>`, `<a name="${slug}" class="anchor" href="#${slug}">`, text, `</a>`, `</h${level}>`].join('');
   },
   listitem(text, task, checked) {
     const li = Renderer.prototype.listitem.call(this, text, task, checked);
@@ -21,9 +15,8 @@ export const htmlRenderer: Partial<RendererApi> = {
   },
   // INLINE
   link(href, title, text) {
-    const processedHref = href.replace(/\.md$/, ".html");
-    return `<a href="${processedHref}" title="${title}">${
-      text || processedHref
-    }</a>`;
+    const processedHref = href.replace(/\.md$/, '.html');
+    const targetAttr = /http[s]?:\/\//.test(processedHref) ? ' target="_blank"' : '';
+    return `<a href="${processedHref}" title="${title || text || ''}"${targetAttr}>${text || processedHref}</a>`;
   },
 };

@@ -1,96 +1,103 @@
-import matter from "gray-matter";
-import fs from "node:fs/promises";
-import path from "node:path";
-import recursive from "recursive-readdir";
-import { generateFeeds } from "./feed";
-import { FormatType, renderMarkdown, renderTemplate } from "./render";
-import { FilePageMetadata, PageMetadata, articleMetadataSchema } from "./schema";
+import matter from 'gray-matter';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import recursive from 'recursive-readdir';
+import { generateFeeds } from './feed';
+import { FormatType, renderMarkdown, renderTemplate } from './render';
+import { FilePageMetadata, PageMetadata, pageMetadataSchema } from './schema';
 
-type BuildOptions = { author: string; domain: string; feed: string; formats: FormatType[] };
+function parseMetadata(data: unknown): PageMetadata {
+  const result = pageMetadataSchema.safeParse(data);
+  if (!result.success) {
+    console.error(result.error);
+    throw new Error('Unable to parse metadata');
+  }
+  const metadata = result.data;
+
+  metadata.page = metadata.page.replace('{{ title }}', metadata.title);
+
+  return metadata;
+}
+
+type FeedOptions = {
+  domain: string;
+  path: string;
+  title: string;
+  description?: string;
+};
+type BuildOptions = {
+  author?: string;
+  formats: FormatType[];
+  feed?: FeedOptions;
+};
 export async function build(inputDir: string, outputDir: string, options: BuildOptions) {
   const inputDirReg = new RegExp(`^${inputDir}`);
   const files = await recursive(inputDir);
   const pagesMetadata: FilePageMetadata[] = [];
 
   for (const fullpath of files) {
-    if (!fullpath.endsWith(".md")) {
+    if (!fullpath.endsWith('.md')) {
       // ignore dotfiles
-      if (path.basename(fullpath).startsWith(".")) {
-        console.info("Ignoring(file: %s)", fullpath);
+      if (path.basename(fullpath).startsWith('.')) {
+        console.info('Ignoring(file: %s)', fullpath);
         continue;
       }
       // copy file foreach formats
       for (const format of options.formats) {
         const formattedOutputDir = path.join(outputDir, format);
-        console.info("Copying(format: %s, file: %s)", format, fullpath);
-        await fs.mkdir(
-          path.dirname(fullpath).replace(inputDirReg, formattedOutputDir),
-          { recursive: true }
-        );
-        await fs.copyFile(
-          fullpath,
-          fullpath.replace(inputDirReg, formattedOutputDir)
-        );
+        console.info('Copying(format: %s, file: %s)', format, fullpath);
+        await fs.mkdir(path.dirname(fullpath).replace(inputDirReg, formattedOutputDir), { recursive: true });
+        await fs.copyFile(fullpath, fullpath.replace(inputDirReg, formattedOutputDir));
       }
       continue;
     }
 
+    console.log('Loading(file: %s)', fullpath);
     const fileContent = await fs.readFile(fullpath);
-    const { data, content: markdown } = matter(fileContent.toString("utf-8"));
+    const { data, content: markdown } = matter(fileContent.toString('utf-8'));
 
-    const result = articleMetadataSchema.safeParse(data);
-    if (!result.success) {
-      console.error(result.error);
-      throw new Error("Unable to parse metadata of " + fullpath);
-    }
-    const metadata = result.data;
+    const metadata = parseMetadata(data);
     pagesMetadata.push({
       filename: fullpath,
-      path: fullpath.replace(inputDirReg, ""),
+      path: fullpath.replace(inputDirReg, ''),
       metadata,
     });
 
-    if (typeof metadata.lang === "undefined") metadata.lang = "en";
-    if (typeof metadata.type === "undefined") metadata.type = "website";
-    if (typeof metadata.author === "undefined") metadata.author = options.author;
-
     for (const format of options.formats) {
-      console.info("Processing(format: %s, file: %s)", format, fullpath);
+      console.info('Processing(format: %s, file: %s)', format, fullpath);
       const output = await renderMarkdown(markdown, { format });
-      const ext = format === "gemini" ? ".gmi" : ".html";
+      const ext = format === 'gemini' ? '.gmi' : '.html';
       const final = await renderTemplate(output, {
         ext,
         format,
         sourcePath: inputDir,
-        relativePath: fullpath.replace(inputDirReg, ""),
+        relativePath: fullpath.replace(inputDirReg, ''),
         metadata,
       });
       const formattedOutputDir = path.join(outputDir, format);
-      await fs.mkdir(
-        path.dirname(fullpath).replace(inputDirReg, formattedOutputDir),
-        { recursive: true }
-      );
-      await fs.writeFile(
-        fullpath.replace(inputDirReg, formattedOutputDir).replace(/\.md$/, ext),
-        final
-      );
+      await fs.mkdir(path.dirname(fullpath).replace(inputDirReg, formattedOutputDir), { recursive: true });
+      await fs.writeFile(fullpath.replace(inputDirReg, formattedOutputDir).replace(/\.md$/, ext), final);
     }
   }
 
-  const filteredPages = pagesMetadata.filter(({ path }) => path.startsWith(options.feed))
+  const feedOptions = options.feed;
+  if (!feedOptions) return;
+
+  const filteredPages = pagesMetadata.filter(({ path }) => path.startsWith(feedOptions.path));
   if (filteredPages.length === 0) return;
 
   for (const format of options.formats) {
     const { rss, atom, json1 } = await generateFeeds(filteredPages, {
-      ext: format === "gemini" ? ".gmi" : ".html",
-      baseUrl: `${format === "gemini" ? "gemini://" : "https://"
-        }${options.domain}/`,
-      feedPath: options.feed,
-      feedAuthor: options.author
+      ext: format === 'gemini' ? '.gmi' : '.html',
+      baseUrl: `${format === 'gemini' ? 'gemini://' : 'https://'}${feedOptions.domain}/`,
+      path: feedOptions.path,
+      author: options.author || '',
+      title: feedOptions.title,
+      description: feedOptions.description,
     });
     const formattedOutputDir = path.join(outputDir, format);
-    await fs.writeFile(path.join(formattedOutputDir, `${options.feed}/rss.xml`), rss);
-    await fs.writeFile(path.join(formattedOutputDir, `${options.feed}/atom.xml`), atom);
-    await fs.writeFile(path.join(formattedOutputDir, `${options.feed}/json1.json`), json1);
+    await fs.writeFile(path.join(formattedOutputDir, `${feedOptions.path}/rss.xml`), rss);
+    await fs.writeFile(path.join(formattedOutputDir, `${feedOptions.path}/atom.xml`), atom);
+    await fs.writeFile(path.join(formattedOutputDir, `${feedOptions.path}/json1.json`), json1);
   }
 }

@@ -1,19 +1,18 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const articleMetadataSchema = z.object({
-  id: z.string().uuid(),
-  type: z.enum(["website", "article"]).default("website"),
-  page: z.string(),
+export const pageMetadataSchema = z.object({
+  type: z.enum(['website', 'article']).default('website'),
+  page: z.string().default('{{ title }}'),
   title: z.string(),
   description: z.string().optional(),
   author: z.string().optional(),
   created_at: z.date(),
   updated_at: z.date(),
-  lang: z.enum(["en"]).default("en"),
+  lang: z.enum(['en']).default('en'),
   tags: z.array(z.string()).optional(),
 });
 
-export type PageMetadata = z.infer<typeof articleMetadataSchema>;
+export type PageMetadata = z.infer<typeof pageMetadataSchema>;
 
 export type FilePageMetadata = {
   filename: string;
