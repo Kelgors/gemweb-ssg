@@ -36,12 +36,12 @@ export async function build(inputDir: string, outputDir: string, options: BuildO
   const pagesMetadata: FilePageMetadata[] = [];
 
   for (const fullpath of files) {
+    // ignore dotfiles
+    if (path.basename(fullpath).startsWith('.')) {
+      console.info('Ignoring(file: %s)', fullpath);
+      continue;
+    }
     if (!fullpath.endsWith('.md')) {
-      // ignore dotfiles
-      if (path.basename(fullpath).startsWith('.')) {
-        console.info('Ignoring(file: %s)', fullpath);
-        continue;
-      }
       // copy file foreach formats
       for (const format of options.formats) {
         const formattedOutputDir = path.join(outputDir, format);
